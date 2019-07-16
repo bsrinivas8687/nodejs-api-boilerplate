@@ -32,9 +32,9 @@ const authenticate = (req, res, cb) => {
                     message: 'JWT token is required for this request.',
                 });
             }
-        }, (userId, next) => {
+        }, (_id, next) => {
             userDBO.findOne({
-                _id: userId,
+                _id,
                 'login_infos.access_token': token,
             }, {}, {}, (error, result) => {
                 if (error) {
