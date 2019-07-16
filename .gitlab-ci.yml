@@ -1,0 +1,31 @@
+image: node:lts-alpine
+
+stages:
+  - test
+  - deploy
+
+lint_test:
+  stage: test
+  only:
+    - development
+    - merge_requests
+  script:
+    - apk add g++ make python
+    - yarn
+    - $(pwd)/node_modules/.bin/eslint $(pwd)
+  cache:
+    paths:
+      - node_modules/
+
+server_dev_deploy:
+  stage: deploy
+  only:
+    - development
+  script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh -o "StrictHostKeyChecking=no" ${SSH_USER}@${SSH_SERVER} "mkdir -p /tmp/nodejs-api-boilerplate"
+    - scp -o "StrictHostKeyChecking=no" $(pwd)/scripts/deploy.sh ${SSH_USER}@${SSH_SERVER}:/tmp/nodejs-api-boilerplate/deploy.sh
+    - ssh -o "StrictHostKeyChecking=no" ${SSH_USER}@${SSH_SERVER} "bash /tmp/nodejs-api-boilerplate/deploy.sh"
