@@ -36,7 +36,9 @@ const authenticate = (req, res, cb) => {
             userDBO.findOne({
                 _id,
                 'login_infos.access_token': token,
-            }, {}, {}, (error, result) => {
+            }, {
+                _id: true,
+            }, {}, (error, result) => {
                 if (error) {
                     console.log(error);
                     next({
