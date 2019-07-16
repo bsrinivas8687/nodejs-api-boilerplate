@@ -90,8 +90,6 @@ const userSchema = new mongoose.Schema({
     },
 }, {
     strict: true,
-}).index({
-    email_address: 1,
 });
 
 module.exports = xyz.model('user', userSchema);

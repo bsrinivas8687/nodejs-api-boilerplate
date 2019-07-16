@@ -263,9 +263,7 @@ const logoutMe = (req, res) => {
             }, {
                 $pull: {
                     login_infos: {
-                        $elemMatch: {
-                            refresh_token: refreshToken,
-                        },
+                        refresh_token: refreshToken,
                     },
                 },
             }, {}, (error) => {
