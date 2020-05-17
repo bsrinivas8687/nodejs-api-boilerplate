@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const config = require('../../config/vars').jwt;
+const config = require('../../config').jwt;
 
 const generateJWT = (payload, expiresIn) => {
     return jwt.sign(payload, config.secret, {
@@ -17,15 +17,13 @@ const generateRefreshToken = (payload) => {
 };
 
 const verifyJWT = (token, cb) => {
-    jwt.verify(token, config.secret,
-        (error, decoded) => {
-            if (error) {
-                console.log(error);
-                cb(error);
-            } else {
-                cb(null, decoded);
-            }
-        });
+    jwt.verify(token, config.secret, (error, decoded) => {
+        if (error) {
+            cb(error);
+        } else {
+            cb(null, decoded);
+        }
+    });
 };
 
 module.exports = {

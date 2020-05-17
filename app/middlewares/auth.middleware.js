@@ -2,8 +2,9 @@ const async = require('async');
 const userDBO = require('../dbos/user.dbo');
 const { verifyJWT } = require('../utils/auth.util');
 const processJSONResponse = require('../utils/response.util');
+const logger = require('../../logger');
 
-const authenticate = (req, res, cb) => {
+const isAuthenticated = (req, res, cb) => {
     let token = null;
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
         token = req.headers.authorization.split(' ')[1];
@@ -14,18 +15,17 @@ const authenticate = (req, res, cb) => {
     async.waterfall([
         (next) => {
             if (token) {
-                verifyJWT(token,
-                    (error, result) => {
-                        if (error) {
-                            console.log(error);
-                            next({
-                                error,
-                                message: 'Error occurred while verifying the JWT token.',
-                            });
-                        } else {
-                            next(null, result['_id']);
-                        }
-                    });
+                verifyJWT(token, (error, result) => {
+                    if (error) {
+                        logger.error(error);
+                        next({
+                            error,
+                            message: 'Error occurred while verifying the JWT token.',
+                        });
+                    } else {
+                        next(null, result._id);
+                    }
+                });
             } else {
                 next({
                     status: 400,
@@ -40,7 +40,7 @@ const authenticate = (req, res, cb) => {
                 _id: true,
             }, {}, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while finding the user.',
@@ -65,4 +65,4 @@ const authenticate = (req, res, cb) => {
     });
 };
 
-module.exports = authenticate;
+module.exports = isAuthenticated;

@@ -14,7 +14,7 @@ const comparePasswords = (hashedPassword, plainPassword, cb) => {
 const saveProfileImage = multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
-            const userId = req.user['_id'].toString();
+            const userId = req.user._id.toString();
             const destinationPath = path.join('uploads', 'users', userId);
 
             fs.mkdir(destinationPath, {

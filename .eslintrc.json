@@ -2,9 +2,12 @@
   "env": {
     "commonjs": true,
     "es6": true,
+    "mocha": true,
     "node": true
   },
-  "extends": "standard",
+  "extends": [
+    "standard"
+  ],
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
@@ -24,6 +27,12 @@
     "comma-dangle": [
       2,
       "always-multiline"
+    ],
+    "dot-notation": [
+      2,
+      {
+        "allowPattern": "^[a-zA-Z0-9]+(_[a-zA-Z0-9]+)+$"
+      }
     ]
   }
 }

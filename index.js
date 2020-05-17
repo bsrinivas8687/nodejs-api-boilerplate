@@ -1,11 +1,13 @@
-const config = require('./config/vars').server;
-const server = require('./server');
+const config = require('./config').server;
+const app = require('./app');
+const logger = require('./logger');
 
-server.init((error, serverInstance) => {
+app.init((error, instance) => {
     if (error) {
-        console.log(error);
+        logger.error(error);
+        process.exit(1);
     } else {
-        serverInstance.listen(config.port);
-        console.log(`Server is running on port: ${config.port}`);
+        instance.listen(config.port);
+        logger.info(`Server is running on port: ${config.port}`);
     }
 });

@@ -4,24 +4,24 @@ const userDBO = require('../dbos/user.dbo');
 const userHelper = require('../helpers/user.helper');
 const authUtil = require('../utils/auth.util');
 const processJSONResponse = require('../utils/response.util');
+const logger = require('../../logger');
 
 const getMyAccessToken = (req, res) => {
     const { refreshToken } = req.body;
 
     async.waterfall([
         (next) => {
-            authUtil.verifyJWT(refreshToken,
-                (error, result) => {
-                    if (error) {
-                        console.log(error);
-                        next({
-                            error,
-                            message: 'Error occurred while verifying the JWT token.',
-                        });
-                    } else {
-                        next(null, result['_id']);
-                    }
-                });
+            authUtil.verifyJWT(refreshToken, (error, result) => {
+                if (error) {
+                    logger.error(error);
+                    next({
+                        error,
+                        message: 'Error occurred while verifying the JWT token.',
+                    });
+                } else {
+                    next(null, result._id);
+                }
+            });
         }, (_id, next) => {
             const payload = { _id };
             const accessToken = authUtil.generateAccessToken(payload);
@@ -36,7 +36,7 @@ const getMyAccessToken = (req, res) => {
                 },
             }, {}, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while finding the user.',
@@ -75,7 +75,7 @@ const getMyProfileDetails = (req, res) => {
                 __v: false,
             }, {}, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while finding the user.',
@@ -104,7 +104,7 @@ const getMyProfileImage = (req, res) => {
                 profile_image: true,
             }, {}, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while finding the user.',
@@ -118,7 +118,7 @@ const getMyProfileImage = (req, res) => {
         if (error) {
             processJSONResponse(res, error, null);
         } else {
-            const profileImagePath = path.resolve(path.join(profileImage['destination'], profileImage['name']));
+            const profileImagePath = path.resolve(path.join(profileImage.destination, profileImage.name));
             res.sendFile(profileImagePath);
         }
     });
@@ -134,24 +134,23 @@ const updateMyProfileDetails = (req, res) => {
     const updates = {
         modified_at: Date.now(),
     };
-    if (name) updates['name'] = name;
+    if (name) updates.name = name;
 
     async.waterfall([
         (next) => {
             if (password) {
-                userHelper.hashPassword(password,
-                    (error, hashedPassword) => {
-                        if (error) {
-                            console.log(error);
-                            next({
-                                error,
-                                message: 'Error occurred while hashing the password.',
-                            });
-                        } else {
-                            updates['password'] = hashedPassword;
-                            next(null);
-                        }
-                    });
+                userHelper.hashPassword(password, (error, hashedPassword) => {
+                    if (error) {
+                        logger.error(error);
+                        next({
+                            error,
+                            message: 'Error occurred while hashing the password.',
+                        });
+                    } else {
+                        updates.password = hashedPassword;
+                        next(null);
+                    }
+                });
             } else {
                 next(null);
             }
@@ -164,7 +163,7 @@ const updateMyProfileDetails = (req, res) => {
                 new: true,
             }, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while updating the user.',
@@ -174,7 +173,7 @@ const updateMyProfileDetails = (req, res) => {
                     delete (result['profile_password']);
                     delete (result['profile_image']);
                     delete (result['login_infos']);
-                    delete (result['__v']);
+                    delete (result.__v);
 
                     next(null, {
                         status: 200,
@@ -193,18 +192,17 @@ const updateMyProfileImage = (req, res) => {
 
     async.waterfall([
         (next) => {
-            userHelper.saveProfileImage(req, res,
-                (error) => {
-                    if (error) {
-                        console.log(error);
-                        next({
-                            error,
-                            message: 'Error occurred while saving the profile image.',
-                        });
-                    } else {
-                        next(null);
-                    }
-                });
+            userHelper.saveProfileImage(req, res, (error) => {
+                if (error) {
+                    logger.error(error);
+                    next({
+                        error,
+                        message: 'Error occurred while saving the profile image.',
+                    });
+                } else {
+                    next(null);
+                }
+            });
         }, (next) => {
             if (req.file) {
                 next(null);
@@ -228,7 +226,7 @@ const updateMyProfileImage = (req, res) => {
                 new: true,
             }, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while updating the user.',
@@ -241,8 +239,8 @@ const updateMyProfileImage = (req, res) => {
     ], (error, profileImage) => {
         if (error) {
             processJSONResponse(res, error, null);
-        } else if (req.query['send']) {
-            const profileImagePath = path.resolve(path.join(profileImage['destination'], profileImage['name']));
+        } else if (req.query.send) {
+            const profileImagePath = path.resolve(path.join(profileImage.destination, profileImage.name));
             res.sendFile(profileImagePath);
         } else {
             processJSONResponse(res, null, {
@@ -268,7 +266,7 @@ const logoutMe = (req, res) => {
                 },
             }, {}, (error) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while updating the user.',

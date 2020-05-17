@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { xyz } = require('../../database');
+const logger = require('../../logger');
 
 const profileImageSchema = new mongoose.Schema({
     name: {
@@ -92,4 +93,16 @@ const userSchema = new mongoose.Schema({
     strict: true,
 });
 
-module.exports = xyz.model('user', userSchema);
+userSchema.index({ created_at: 1 });
+userSchema.index({ updated_at: 1 });
+
+const model = xyz.model('user', userSchema)
+    .on('index', (error) => {
+        if (error) {
+            logger.error(error);
+        }
+    });
+
+model.syncIndexes().then().catch(logger.error);
+
+module.exports = model;

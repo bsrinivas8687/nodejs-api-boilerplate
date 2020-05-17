@@ -3,6 +3,7 @@ const userDBO = require('../dbos/user.dbo');
 const userHelper = require('../helpers/user.helper');
 const authUtil = require('../utils/auth.util');
 const processJSONResponse = require('../utils/response.util');
+const logger = require('../../logger');
 
 const addUser = (req, res) => {
     const {
@@ -13,18 +14,17 @@ const addUser = (req, res) => {
 
     async.waterfall([
         (next) => {
-            userHelper.hashPassword(password,
-                (error, hashedPassword) => {
-                    if (error) {
-                        console.log(error);
-                        next({
-                            error,
-                            message: 'Error occurred while hashing the password.',
-                        });
-                    } else {
-                        next(null, hashedPassword);
-                    }
-                });
+            userHelper.hashPassword(password, (error, hashedPassword) => {
+                if (error) {
+                    logger.error(error);
+                    next({
+                        error,
+                        message: 'Error occurred while hashing the password.',
+                    });
+                } else {
+                    next(null, hashedPassword);
+                }
+            });
         }, (hashedPassword, next) => {
             userDBO.save({
                 name: name,
@@ -32,13 +32,13 @@ const addUser = (req, res) => {
                 password: hashedPassword,
             }, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while saving the user.',
                     });
                 } else {
-                    next(null, result['_id']);
+                    next(null, result._id);
                 }
             });
         }, (_id, next) => {
@@ -61,17 +61,17 @@ const addUser = (req, res) => {
                 new: true,
             }, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while updating the user.',
                     });
                 } else {
                     result = result.toObject();
-                    delete (result['password']);
+                    delete (result.password);
                     delete (result['profile_image']);
                     delete (result['login_infos']);
-                    delete (result['__v']);
+                    delete (result.__v);
 
                     next(null, {
                         status: 201,
@@ -99,7 +99,7 @@ const getUsers = (req, res) => {
                     __v: false,
                 }, {}, (error, result) => {
                     if (error) {
-                        console.log(error);
+                        logger.error(error);
                         next({
                             error,
                             message: 'Error occurred while finding the users.',

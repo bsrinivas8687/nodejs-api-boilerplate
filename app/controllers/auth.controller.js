@@ -3,6 +3,7 @@ const userDBO = require('../dbos/user.dbo');
 const userHelper = require('../helpers/user.helper');
 const authUtil = require('../utils/auth.util');
 const processJSONResponse = require('../utils/response.util');
+const logger = require('../../logger');
 
 const login = (req, res) => {
     const {
@@ -18,7 +19,7 @@ const login = (req, res) => {
                 password: true,
             }, {}, (error, result) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while finding the user.',
@@ -33,33 +34,32 @@ const login = (req, res) => {
                 }
             });
         }, (user, next) => {
-            userHelper.comparePasswords(user['password'], password,
-                (error, result) => {
-                    if (error) {
-                        console.log(error);
-                        next({
-                            error,
-                            message: 'Error occurred while comparing the passwords.',
-                        });
-                    } else if (result) {
-                        next(null, user);
-                    } else {
-                        next({
-                            status: 400,
-                            message: 'Passwords do not match.',
-                        });
-                    }
-                });
+            userHelper.comparePasswords(user.password, password, (error, result) => {
+                if (error) {
+                    logger.error(error);
+                    next({
+                        error,
+                        message: 'Error occurred while comparing the passwords.',
+                    });
+                } else if (result) {
+                    next(null, user);
+                } else {
+                    next({
+                        status: 400,
+                        message: 'Passwords do not match.',
+                    });
+                }
+            });
         }, (user, next) => {
             const payload = {
-                _id: user['_id'],
+                _id: user._id,
             };
             const remoteAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
             const accessToken = authUtil.generateAccessToken(payload);
             const refreshToken = authUtil.generateRefreshToken(payload);
 
             userDBO.findOneAndUpdate({
-                _id: user['_id'],
+                _id: user._id,
             }, {
                 $addToSet: {
                     login_infos: {
@@ -70,7 +70,7 @@ const login = (req, res) => {
                 },
             }, {}, (error) => {
                 if (error) {
-                    console.log(error);
+                    logger.error(error);
                     next({
                         error,
                         message: 'Error occurred while updating the user.',
